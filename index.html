@@ -31,7 +31,7 @@
 
     async function initLIFF() {
       try {
-        await liff.init({ liffId: "2008865871-TP9wuByO" }); // ← あなたのLIFF IDに置き換えてください
+        await liff.init({ liffId: "2008865871-ceuoxSzX" }); // ← あなたのLIFF IDに置き換えてください
         const profile = await liff.getProfile();
         window.lineUserId = profile.userId;
         document.getElementById("status").textContent = "ようこそ、" + profile.displayName + "さん";
