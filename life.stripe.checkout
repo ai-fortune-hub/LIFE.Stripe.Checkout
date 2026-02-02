@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>登録・決済ページ</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 0; padding: 16px; background: #f5f5f5; }
+    .card { background: #fff; padding: 16px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,.05); max-width: 480px; margin: 0 auto; }
+    h2 { margin-top: 0; }
+    .btn { display: block; width: 100%; padding: 12px; margin: 8px 0; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
+    .primary { background: #00B900; color: white; }
+    .secondary { background: #0066ff; color: white; }
+    .muted { color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>会員登録・決済</h2>
+    <p id="status">LIFF初期化中…</p>
+
+    <button id="btn-onetime" class="btn primary">単品購入へ進む</button>
+    <button id="btn-subscribe" class="btn secondary">サブスク登録へ進む</button>
+
+    <p class="muted">※ 決済はStripeへ遷移します。LINEのIDは安全に連携されます。</p>
+  </div>
+
+  <script>
+    const MAKE_WEBHOOK = "https://hook.eu1.make.com/XXXXXXXXXXXXXX"; // ← あなたのMake.comのWebhookに置き換えてください
+
+    async function initLIFF() {
+      try {
+        await liff.init({ liffId: "YOUR_LIFF_ID_HERE" }); // ← あなたのLIFF IDに置き換えてください
+        const profile = await liff.getProfile();
+        window.lineUserId = profile.userId;
+        document.getElementById("status").textContent = "ようこそ、" + profile.displayName + "さん";
+      } catch (err) {
+        console.error(err);
+        document.getElementById("status").textContent = "LIFF初期化エラー";
+      }
+    }
+
+    async function createCheckout(type) {
+      if (!window.lineUserId) {
+        alert("LINE IDが取得できていません。もう一度開き直してください。");
+        return;
+      }
+
+      const payload = {
+        action: "create_stripe_session",
+        lineUserId: window.lineUserId,
+        productType: type // "one_time" or "subscription"
+      };
+
+      try {
+        const res = await fetch(MAKE_WEBHOOK, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (!data.checkoutUrl) {
+          alert("決済URLの取得に失敗しました");
+          console.error(data);
+          return;
+        }
+
+        // Stripe決済ページへ遷移
+        window.location.href = data.checkoutUrl;
+      } catch (e) {
+        alert("通信エラーが発生しました");
+        console.error(e);
+      }
+    }
+
+    document.getElementById("btn-onetime").addEventListener("click", () => createCheckout("one_time"));
+    document.getElementById("btn-subscribe").addEventListener("click", () => createCheckout("subscription"));
+
+    initLIFF();
+  </script>
+</body>
+</html>
