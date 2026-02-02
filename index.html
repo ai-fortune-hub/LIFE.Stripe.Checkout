@@ -1,85 +1,76 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>登録・決済ページ</title>
+  <meta charset="UTF-8">
+  <title>決済ページ</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 0; padding: 16px; background: #f5f5f5; }
-    .card { background: #fff; padding: 16px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,.05); max-width: 480px; margin: 0 auto; }
-    h2 { margin-top: 0; }
-    .btn { display: block; width: 100%; padding: 12px; margin: 8px 0; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
-    .primary { background: #00B900; color: white; }
-    .secondary { background: #0066ff; color: white; }
-    .muted { color: #666; font-size: 12px; }
+    body { font-family: sans-serif; padding: 20px; }
+    .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; }
+    button { padding: 10px 15px; font-size: 16px; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h2>会員登録・決済</h2>
-    <p id="status">LIFF初期化中…</p>
 
-    <button id="btn-onetime" class="btn primary">単品購入へ進む</button>
-    <button id="btn-subscribe" class="btn secondary">サブスク登録へ進む</button>
+<h2>月詠アオイのショップ 🌙</h2>
 
-    <p class="muted">※ 決済はStripeへ遷移します。LINEのIDは安全に連携されます。</p>
-  </div>
+<div class="card">
+  <h3>🔹 単品商品</h3>
+  <p>占いメッセージ（1回）</p>
+  <p>価格：500円</p>
+  <button onclick="buySingle()">単品を購入</button>
+</div>
 
-  <script>
-    const MAKE_WEBHOOK = "https://hook.eu1.make.com/jn9zmu3nbh1ligcs476g1wf2f87887j3"; // ← あなたのMake.comのWebhookに置き換えてください
+<div class="card">
+  <h3>🔹 サブスク商品</h3>
+  <p>毎日の占い＋安否確認</p>
+  <p>価格：月額 980円</p>
+  <button onclick="buySubscription()">サブスクに登録</button>
+</div>
 
-    async function initLIFF() {
-      try {
-        await liff.init({ liffId: "2008865871-ceuoxSzX" }); // ← あなたのLIFF IDに置き換えてください
-        const profile = await liff.getProfile();
-        window.lineUserId = profile.userId;
-        document.getElementById("status").textContent = "ようこそ、" + profile.displayName + "さん";
-      } catch (err) {
-        console.error(err);
-        document.getElementById("status").textContent = "LIFF初期化エラー";
-      }
-    }
+<script>
+const LIFF_ID = "2008865871-ceuoxSzX";
 
-    async function createCheckout(type) {
-      if (!window.lineUserId) {
-        alert("LINE IDが取得できていません。もう一度開き直してください。");
-        return;
-      }
+async function initLIFF() {
+  await liff.init({ liffId: LIFF_ID });
 
-      const payload = {
-        action: "create_stripe_session",
-        lineUserId: window.lineUserId,
-        productType: type // "one_time" or "subscription"
-      };
+  if (!liff.isLoggedIn()) {
+    liff.login();
+  }
+}
 
-      try {
-        const res = await fetch(MAKE_WEBHOOK, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
+async function getLineUserId() {
+  const profile = await liff.getProfile();
+  return profile.userId; // ← これが最重要
+}
 
-        const data = await res.json();
+async function buySingle() {
+  const lineUserId = await getLineUserId();
 
-        if (!data.checkoutUrl) {
-          alert("決済URLの取得に失敗しました");
-          console.error(data);
-          return;
-        }
+  const stripeUrl =
+    "https://checkout.stripe.com/c/pay/your_single_checkout_link" +
+    "?client_reference_id=" + encodeURIComponent(lineUserId) +
+    "&metadata[line_user_id]=" + encodeURIComponent(lineUserId) +
+    "&metadata[purchase_type]=single" +
+    "&metadata[quantity]=1";
 
-        // Stripe決済ページへ遷移
-        window.location.href = data.checkoutUrl;
-      } catch (e) {
-        alert("通信エラーが発生しました");
-        console.error(e);
-      }
-    }
+  window.location.href = stripeUrl;
+}
 
-    document.getElementById("btn-onetime").addEventListener("click", () => createCheckout("one_time"));
-    document.getElementById("btn-subscribe").addEventListener("click", () => createCheckout("subscription"));
+async function buySubscription() {
+  const lineUserId = await getLineUserId();
 
-    initLIFF();
-  </script>
+  const stripeUrl =
+    "https://checkout.stripe.com/c/pay/your_subscription_checkout_link" +
+    "?client_reference_id=" + encodeURIComponent(lineUserId) +
+    "&metadata[line_user_id]=" + encodeURIComponent(lineUserId) +
+    "&metadata[purchase_type]=subscription";
+
+  window.location.href = stripeUrl;
+}
+
+initLIFF();
+</script>
+
 </body>
 </html>
