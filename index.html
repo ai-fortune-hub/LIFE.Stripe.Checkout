@@ -48,7 +48,7 @@ async function buySingle() {
   const lineUserId = await getLineUserId();
 
   const stripeUrl =
-    "https://checkout.stripe.com/c/pay/your_single_checkout_link" +
+    "https://buy.stripe.com/test_4gM4gzgd1fYv26D8Mz1Nu02" +
     "?client_reference_id=" + encodeURIComponent(lineUserId) +
     "&metadata[line_user_id]=" + encodeURIComponent(lineUserId) +
     "&metadata[purchase_type]=single" +
@@ -61,7 +61,7 @@ async function buySubscription() {
   const lineUserId = await getLineUserId();
 
   const stripeUrl =
-    "https://checkout.stripe.com/c/pay/your_subscription_checkout_link" +
+    "https://buy.stripe.com/test_9B63cv0e3fYvbHd2ob1Nu03" +
     "?client_reference_id=" + encodeURIComponent(lineUserId) +
     "&metadata[line_user_id]=" + encodeURIComponent(lineUserId) +
     "&metadata[purchase_type]=subscription";
