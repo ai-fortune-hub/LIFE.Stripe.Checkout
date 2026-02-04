@@ -5,9 +5,10 @@
   <title>決済ページ</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-    body { font-family: sans-serif; padding: 20px; }
-    .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; }
-    button { padding: 10px 15px; font-size: 16px; }
+    body { font-family: sans-serif; padding: 20px; color: #333; }
+    .card { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px; }
+    button { padding: 12px 20px; font-size: 16px; background-color: #06C755; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button:active { background-color: #05a346; }
   </style>
 </head>
 <body>
@@ -29,44 +30,39 @@
 </div>
 
 <script>
-const LIFF_ID = "2008865871-ceuoxSzX";
+// --- 設定項目 ---
+const LIFF_ID = "2008865871-ceuoxSzX"; 
+const STRIPE_SINGLE_URL = "https://buy.stripe.com/test_5kQ28rgd16nVaD93sf1Nu04"; // 単品用のStripeリンク
+const STRIPE_SUBSCRIPTION_URL = "https://buy.stripe.com/test_9B63cv0e3fYvbHd2ob1Nu03"; // サブスク用のStripeリンク
 
 async function initLIFF() {
-  await liff.init({ liffId: LIFF_ID });
-
-  if (!liff.isLoggedIn()) {
-    liff.login();
+  try {
+    await liff.init({ liffId: LIFF_ID });
+    if (!liff.isLoggedIn()) {
+      liff.login();
+    }
+  } catch (err) {
+    console.error("LIFFの初期化に失敗しました", err);
   }
 }
 
 async function getLineUserId() {
   const profile = await liff.getProfile();
-  return profile.userId; // ← これが最重要
+  return profile.userId;
 }
 
 async function buySingle() {
   const lineUserId = await getLineUserId();
-
-  const stripeUrl =
-    "https://buy.stripe.com/test_4gM4gzgd1fYv26D8Mz1Nu02" +
-    "?client_reference_id=" + encodeURIComponent(lineUserId) +
-    "&metadata[line_user_id]=" + encodeURIComponent(lineUserId) +
-    "&metadata[purchase_type]=single" +
-    "&metadata[quantity]=1";
-
-  window.location.href = stripeUrl;
+  // client_reference_id のみに絞って付与します
+  const finalUrl = `${STRIPE_SINGLE_URL}?client_reference_id=${encodeURIComponent(lineUserId)}`;
+  window.location.href = finalUrl;
 }
 
 async function buySubscription() {
   const lineUserId = await getLineUserId();
-
-  const stripeUrl =
-    "https://buy.stripe.com/test_9B63cv0e3fYvbHd2ob1Nu03" +
-    "?client_reference_id=" + encodeURIComponent(lineUserId) +
-    "&metadata[line_user_id]=" + encodeURIComponent(lineUserId) +
-    "&metadata[purchase_type]=subscription";
-
-  window.location.href = stripeUrl;
+  // サブスク用リンクにも同様に lineUserId を付与します
+  const finalUrl = `${STRIPE_SUBSCRIPTION_URL}?client_reference_id=${encodeURIComponent(lineUserId)}`;
+  window.location.href = finalUrl;
 }
 
 initLIFF();
