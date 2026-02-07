@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>決済ページ</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    /* スマホ向けのリセットとベーススタイル */
+    body { 
+      font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+      padding: 16px; 
+      margin: 0;
+      background-color: #f8f9fa;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 1.4rem;
+      margin: 20px 0;
+      color: #2c3e50;
+    }
+
+    /* カードのデザインをスマホで見やすく */
+    .card { 
+      background: white;
+      border: none;
+      border-radius: 12px; 
+      padding: 20px; 
+      margin-bottom: 20px; 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05); /* 少し高級感のある影 */
+    }
+
+    .card h3 {
+      margin-top: 0;
+      font-size: 1.2rem;
+      color: #007bff;
+    }
+
+    .price {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    .description {
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 15px;
+    }
+
+    /* 指で押しやすいボタンサイズ */
+    button { 
+      width: 100%; /* スマホでは横幅いっぱいのボタンが押しやすい */
+      padding: 14px; 
+      font-size: 18px; 
+      font-weight: bold;
+      background-color: #06C755; /* LINEカラー */
+      color: white; 
+      border: none; 
+      border-radius: 8px; 
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    button:active {
+      background-color: #05a346;
+      transform: scale(0.98); /* 押した時の感触 */
+    }
+  </style>
+</head>
+<body>
+
+<h2>月詠アオイのショップ 🌙</h2>
+
+<div class="card">
+  <h3>🔹 単品商品</h3>
+  <p class="description">占いメッセージ（1回）</p>
+  <p class="price">500円</p>
+  <button onclick="buySingle()">購入する</button>
+</div>
+
+<div class="card">
+  <h3>🔹 サブスク商品</h3>
+  <p class="description">毎日の占い＋安否確認</p>
+  <p class="price">980円 <small>/ 月</small></p>
+  <button onclick="buySubscription()">登録する</button>
+</div>
+
+<script>
+// --- 設定項目 ---
+const LIFF_ID = "2008865871-ceuoxSzX"; 
+const STRIPE_SINGLE_URL = "https://buy.stripe.com/test_5kQ28rgd16nVaD93sf1Nu04"; 
+const STRIPE_SUBSCRIPTION_URL = "https://buy.stripe.com/test_9B63cv0e3fYvbHd2ob1Nu03"; 
+
+async function initLIFF() {
+  try {
+    await liff.init({ liffId: LIFF_ID });
+    if (!liff.isLoggedIn()) {
+      liff.login();
+    }
+  } catch (err) {
+    console.error("LIFFの初期化に失敗しました", err);
+  }
+}
+
+async function getLineUserId() {
+  const profile = await liff.getProfile();
+  return profile.userId;
+}
+
+async function buySingle() {
+  const lineUserId = await getLineUserId();
+  const finalUrl = `${STRIPE_SINGLE_URL}?client_reference_id=${encodeURIComponent(lineUserId)}`;
+  window.location.href = finalUrl;
+}
+
+async function buySubscription() {
+  const lineUserId = await getLineUserId();
+  const finalUrl = `${STRIPE_SUBSCRIPTION_URL}?client_reference_id=${encodeURIComponent(lineUserId)}`;
+  window.location.href = finalUrl;
+}
+
+initLIFF();
+</script>
+
+</body>
+</html>
